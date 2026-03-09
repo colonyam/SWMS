@@ -1,0 +1,2 @@
+# SWMS
+ smart waste management 
