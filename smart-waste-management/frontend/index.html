@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-recycle"></i>
+                    <span>SmartWaste</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="bins">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Waste Bins</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="routes">
+                    <i class="fas fa-route"></i>
+                    <span>Routes</span>
+                </a>
+                <a href="#" class="nav-item" data-page="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                    <span class="badge" id="alert-badge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="map">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Live Map</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="connection-status" id="connection-status">
+                    <span class="status-dot offline"></span>
+                    <span class="status-text">Disconnected</span>
+                </div>
+                <div class="version">v1.0.0</div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-icon" id="refresh-btn" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn-icon" id="notifications-btn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="header-alert-badge">0</span>
+                    </button>
+                    <div class="user-menu">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=10B981&color=fff" alt="User" class="user-avatar">
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Dashboard Page -->
+                <div class="page active" id="dashboard-page">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="total-bins">-</span>
+                                <span class="stat-label">Total Bins</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="active-bins">-</span>
+                                <span class="stat-label">Active Bins</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="high-fill-bins">-</span>
+                                <span class="stat-label">High Fill (>80%)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon red">
+                                <i class="fas fa-radiation"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="critical-bins">-</span>
+                                <span class="stat-label">Critical (>95%)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="collections-today">-</span>
+                                <span class="stat-label">Collections Today</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon yellow">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="unresolved-alerts">-</span>
+                                <span class="stat-label">Unresolved Alerts</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Row -->
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Fill Level Trends</h3>
+                                <select id="trend-period">
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="30" selected>Last 30 Days</option>
+                                </select>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="fill-trend-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Bin Status Distribution</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="status-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom Row -->
+                    <div class="bottom-row">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3>Critical Alerts</h3>
+                                <a href="#" class="view-all" data-page="alerts">View All</a>
+                            </div>
+                            <div class="alerts-list" id="critical-alerts-list">
+                                <div class="loading">Loading alerts...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3>Bins Needing Collection</h3>
+                                <a href="#" class="view-all" data-page="bins">View All</a>
+                            </div>
+                            <div class="bins-list" id="priority-bins-list">
+                                <div class="loading">Loading bins...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bins Page -->
+                <div class="page" id="bins-page">
+                    <div class="page-actions">
+                        <div class="filters">
+                            <select id="bin-type-filter">
+                                <option value="">All Types</option>
+                                <option value="general">General</option>
+                                <option value="recycling">Recycling</option>
+                                <option value="organic">Organic</option>
+                                <option value="hazardous">Hazardous</option>
+                            </select>
+                            <select id="bin-status-filter">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <input type="text" id="bin-search" placeholder="Search bins...">
+                        </div>
+                        <button class="btn btn-primary" id="add-bin-btn">
+                            <i class="fas fa-plus"></i> Add Bin
+                        </button>
+                    </div>
+                    
+                    <div class="bins-grid" id="bins-grid">
+                        <div class="loading">Loading bins...</div>
+                    </div>
+                </div>
+                
+                <!-- Analytics Page -->
+                <div class="page" id="analytics-page">
+                    <div class="analytics-grid">
+                        <div class="chart-card wide">
+                            <div class="chart-header">
+                                <h3>Collection Efficiency</h3>
+                                <select id="efficiency-period">
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="30" selected>Last 30 Days</option>
+                                    <option value="90">Last 90 Days</option>
+                                </select>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="efficiency-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Fill Patterns by Hour</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="hourly-pattern-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Waste by Zone</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="zone-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card wide">
+                            <div class="chart-header">
+                                <h3>Predictions - Next 7 Days</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="prediction-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Efficiency Metrics -->
+                    <div class="metrics-panel">
+                        <h3>Efficiency Metrics</h3>
+                        <div class="metrics-grid" id="efficiency-metrics">
+                            <div class="metric-item">
+                                <span class="metric-value" id="eff-total-collections">-</span>
+                                <span class="metric-label">Total Collections</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-value" id="eff-avg-fill">-</span>
+                                <span class="metric-label">Avg Fill at Collection</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-value" id="eff-collections-per-day">-</span>
+                                <span class="metric-label">Collections/Day</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-value" id="eff-fuel-score">-</span>
+                                <span class="metric-label">Fuel Efficiency Score</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-value" id="eff-cost-savings">-</span>
+                                <span class="metric-label">Cost Savings %</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Routes Page -->
+                <div class="page" id="routes-page">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="generate-route-btn">
+                            <i class="fas fa-magic"></i> Generate Smart Route
+                        </button>
+                        <button class="btn btn-secondary" id="optimize-route-btn">
+                            <i class="fas fa-route"></i> Optimize Custom Route
+                        </button>
+                    </div>
+                    
+                    <div class="routes-container">
+                        <div class="routes-list-panel">
+                            <h3>Collection Routes</h3>
+                            <div class="routes-list" id="routes-list">
+                                <div class="loading">Loading routes...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="route-detail-panel" id="route-detail">
+                            <div class="empty-state">
+                                <i class="fas fa-route"></i>
+                                <p>Select a route to view details</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alerts Page -->
+                <div class="page" id="alerts-page">
+                    <div class="page-actions">
+                        <div class="filters">
+                            <select id="alert-type-filter">
+                                <option value="">All Types</option>
+                                <option value="fill_level_high">High Fill</option>
+                                <option value="fill_level_critical">Critical Fill</option>
+                                <option value="low_battery">Low Battery</option>
+                                <option value="sensor_offline">Sensor Offline</option>
+                            </select>
+                            <select id="alert-severity-filter">
+                                <option value="">All Severities</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <select id="alert-status-filter">
+                                <option value="false">Unresolved</option>
+                                <option value="">All</option>
+                                <option value="true">Resolved</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" id="check-offline-btn">
+                            <i class="fas fa-search"></i> Check Offline Sensors
+                        </button>
+                    </div>
+                    
+                    <div class="alerts-table-container">
+                        <table class="alerts-table" id="alerts-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Bin</th>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="loading">Loading alerts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Map Page -->
+                <div class="page" id="map-page">
+                    <div class="map-container">
+                        <div id="live-map"></div>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot green"></span>
+                                <span>Normal (&lt;50%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot yellow"></span>
+                                <span>Medium (50-80%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot orange"></span>
+                                <span>High (80-95%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot red"></span>
+                                <span>Critical (&gt;95%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="add-bin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Waste Bin</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-bin-form">
+                    <div class="form-group">
+                        <label for="bin-location">Location Name</label>
+                        <input type="text" id="bin-location" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bin-lat">Latitude</label>
+                            <input type="number" id="bin-lat" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bin-lon">Longitude</label>
+                            <input type="number" id="bin-lon" step="any" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bin-type">Bin Type</label>
+                            <select id="bin-type">
+                                <option value="general">General</option>
+                                <option value="recycling">Recycling</option>
+                                <option value="organic">Organic</option>
+                                <option value="hazardous">Hazardous</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="bin-capacity">Capacity (Liters)</label>
+                            <input type="number" id="bin-capacity" value="240" min="50" max="2000">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="save-bin-btn">Add Bin</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="resolve-alert-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Resolve Alert</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="resolve-alert-form">
+                    <input type="hidden" id="resolve-alert-id">
+                    <div class="form-group">
+                        <label for="resolved-by">Resolved By</label>
+                        <input type="text" id="resolved-by" placeholder="Your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="resolution-notes">Notes</label>
+                        <textarea id="resolution-notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="confirm-resolve-btn">Resolve</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="generate-route-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Smart Route</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="generate-route-form">
+                    <div class="form-group">
+                        <label for="route-zone">Zone (Optional)</label>
+                        <input type="text" id="route-zone" placeholder="e.g., Downtown">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="max-bins">Max Bins</label>
+                            <input type="number" id="max-bins" value="15" min="2" max="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="min-fill">Min Fill Level (%)</label>
+                            <input type="number" id="min-fill" value="60" min="0" max="100">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="confirm-generate-route-btn">Generate</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
