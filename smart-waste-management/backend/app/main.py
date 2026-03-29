@@ -54,8 +54,9 @@ app.add_middleware(
 )
 
 # Import and include routers
-from app.routers import bins, readings, analytics, alerts, routes
+from app.routers import bins, readings, analytics, alerts, routes, auth
 
+app.include_router(auth.router, prefix=f"{settings.API_PREFIX}/{settings.API_VERSION}")
 app.include_router(bins.router, prefix=f"{settings.API_PREFIX}/{settings.API_VERSION}")
 app.include_router(readings.router, prefix=f"{settings.API_PREFIX}/{settings.API_VERSION}")
 app.include_router(analytics.router, prefix=f"{settings.API_PREFIX}/{settings.API_VERSION}")
@@ -91,6 +92,7 @@ def root():
         "documentation": "/docs",
         "api_prefix": f"{settings.API_PREFIX}/{settings.API_VERSION}",
         "endpoints": {
+            "auth": f"{settings.API_PREFIX}/{settings.API_VERSION}/auth",
             "bins": f"{settings.API_PREFIX}/{settings.API_VERSION}/bins",
             "readings": f"{settings.API_PREFIX}/{settings.API_VERSION}/readings",
             "analytics": f"{settings.API_PREFIX}/{settings.API_VERSION}/analytics",
@@ -99,6 +101,40 @@ def root():
             "websocket": "/ws"
         }
     }
+
+
+# Create default admin user on startup
+@app.on_event("startup")
+async def create_default_admin():
+    """Create default admin user if no users exist"""
+    from sqlalchemy.orm import Session
+    from app.database import SessionLocal
+    from app.models.user import User, UserRole
+    from app.utils.auth import get_password_hash
+    
+    db = SessionLocal()
+    try:
+        # Check if any users exist
+        user_count = db.query(User).count()
+        if user_count == 0:
+            # Create default admin user
+            admin = User(
+                username="admin",
+                email="admin@smartwaste.com",
+                hashed_password=get_password_hash("admin123"),
+                full_name="System Administrator",
+                role=UserRole.ADMIN,
+                is_active=True,
+                is_superuser=True
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Default admin user created (username: admin, password: admin123)")
+            logger.info("IMPORTANT: Please change the default password after first login!")
+    except Exception as e:
+        logger.error(f"Error creating default admin: {e}")
+    finally:
+        db.close()
 
 
 # Serve static files (frontend)

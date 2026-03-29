@@ -1,5 +1,5 @@
 """Pydantic schemas for request/response validation"""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -39,6 +39,65 @@ class RouteStatusEnum(str, Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+
+
+class UserRoleEnum(str, Enum):
+    ADMIN = "admin"
+    MANAGER = "manager"
+    OPERATOR = "operator"
+    VIEWER = "viewer"
+
+
+# ============== User Schemas ==============
+class UserBase(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    full_name: Optional[str] = Field(None, max_length=100)
+    phone: Optional[str] = Field(None, max_length=20)
+
+
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6, max_length=100)
+    role: UserRoleEnum = UserRoleEnum.OPERATOR
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = Field(None, max_length=100)
+    phone: Optional[str] = Field(None, max_length=20)
+    role: Optional[UserRoleEnum] = None
+    is_active: Optional[bool] = None
+
+
+class UserResponse(UserBase):
+    id: int
+    role: UserRoleEnum
+    is_active: bool
+    is_superuser: bool
+    last_login: Optional[datetime]
+    login_count: int
+    created_at: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: UserResponse
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=6, max_length=100)
 
 
 # ============== Waste Bin Schemas ==============

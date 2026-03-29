@@ -10,6 +10,7 @@ class SmartWasteApp {
         this.refreshIntervals = {};
         this.bins = [];
         this.alerts = [];
+        this.currentUser = null;
         
         this.init();
     }
@@ -18,10 +19,92 @@ class SmartWasteApp {
      * Initialize the application
      */
     init() {
+        // Check authentication first
+        if (!this.checkAuth()) {
+            return;
+        }
+        
+        this.loadCurrentUser();
         this.setupEventListeners();
         this.connectWebSocket();
         this.navigateTo('dashboard');
         this.startAutoRefresh();
+    }
+    
+    /**
+     * Check if user is authenticated
+     */
+    checkAuth() {
+        const token = this.getToken();
+        
+        if (!token) {
+            // Redirect to login page
+            window.location.href = 'login.html';
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get authentication token
+     */
+    getToken() {
+        return localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    }
+    
+    /**
+     * Load current user info
+     */
+    async loadCurrentUser() {
+        try {
+            const token = this.getToken();
+            const response = await fetch(`${CONFIG.API_BASE_URL}/api/v1/auth/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.currentUser = await response.json();
+                this.updateUserDisplay();
+            } else {
+                // Token invalid, redirect to login
+                this.logout();
+            }
+        } catch (error) {
+            console.error('Error loading user:', error);
+        }
+    }
+    
+    /**
+     * Update user display in UI
+     */
+    updateUserDisplay() {
+        if (this.currentUser) {
+            // Update user avatar with name
+            const avatar = document.querySelector('.user-avatar');
+            if (avatar) {
+                avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser.full_name || this.currentUser.username)}&background=10B981&color=fff`;
+                avatar.title = `${this.currentUser.full_name || this.currentUser.username} (${this.currentUser.role})`;
+            }
+        }
+    }
+    
+    /**
+     * Logout user
+     */
+    logout() {
+        // Clear tokens
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('user');
+        
+        // Redirect to login
+        window.location.href = 'login.html';
     }
     
     /**
@@ -45,6 +128,11 @@ class SmartWasteApp {
         // Refresh button
         document.getElementById('refresh-btn').addEventListener('click', () => {
             this.refreshCurrentPage();
+        });
+        
+        // Logout button
+        document.getElementById('logout-btn')?.addEventListener('click', () => {
+            this.logout();
         });
         
         // Modal close buttons

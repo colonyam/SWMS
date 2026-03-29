@@ -39,6 +39,13 @@ A comprehensive IoT-based waste management platform that monitors bin fill level
 - Priority bins list
 - Responsive design
 
+### Authentication & Security
+- JWT-based user authentication
+- Role-based access control (Admin, Manager, Operator, Viewer)
+- Secure password hashing with bcrypt
+- Session management with refresh tokens
+- Protected API endpoints
+
 ## Tech Stack
 
 ### Backend
@@ -75,8 +82,10 @@ smart-waste-management/
 │   │   │   ├── sensor_reading.py
 │   │   │   ├── alert.py
 │   │   │   ├── collection_route.py
-│   │   │   └── collection_event.py
+│   │   │   ├── collection_event.py
+│   │   │   └── user.py
 │   │   ├── routers/             # API endpoints
+│   │   │   ├── auth.py          # Authentication
 │   │   │   ├── bins.py
 │   │   │   ├── readings.py
 │   │   │   ├── analytics.py
@@ -90,15 +99,18 @@ smart-waste-management/
 │   │       └── schemas.py       # Pydantic schemas
 │   └── requirements.txt
 ├── frontend/
-│   ├── index.html               # Main HTML file
+│   ├── index.html               # Main dashboard HTML
+│   ├── login.html               # Login page
 │   ├── css/
-│   │   └── styles.css           # Stylesheet
+│   │   ├── styles.css           # Main stylesheet
+│   │   └── login.css            # Login page styles
 │   └── js/
 │       ├── config.js            # Configuration
 │       ├── api.js               # API client
 │       ├── charts.js            # Chart manager
 │       ├── map.js               # Map manager
-│       └── app.js               # Main application
+│       ├── app.js               # Main application
+│       └── login.js             # Login page script
 ├── iot_simulator/
 │   ├── simulator.py             # IoT sensor simulator
 │   └── requirements.txt
@@ -148,11 +160,16 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 curl -X POST http://localhost:8000/api/v1/seed-data
 ```
 
-3. Open the frontend:
-   - Open `frontend/index.html` in your browser, or
-   - Access `http://localhost:8000` (backend serves frontend)
+3. Open the login page:
+   - Open `frontend/login.html` in your browser, or
+   - Access `http://localhost:8000/login.html`
 
-4. (Optional) Start the IoT simulator:
+4. Login with default credentials:
+   - **Username:** `admin`
+   - **Password:** `admin123`
+   - **Important:** Change the default password after first login!
+
+5. (Optional) Start the IoT simulator:
 ```bash
 cd iot_simulator
 python simulator.py

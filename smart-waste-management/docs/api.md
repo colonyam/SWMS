@@ -8,7 +8,78 @@ Base URL: `http://localhost:8000/api/v1`
 
 ## Authentication
 
-Currently, the API does not require authentication. For production use, implement JWT or API key authentication.
+The API uses JWT (JSON Web Token) for authentication. Include the token in the Authorization header for protected endpoints.
+
+### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer",
+  "expires_in": 1440,
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@smartwaste.com",
+    "full_name": "System Administrator",
+    "role": "admin",
+    "is_active": true
+  }
+}
+```
+
+### Using the Token
+Include the token in the Authorization header:
+```http
+Authorization: Bearer <access_token>
+```
+
+### Refresh Token
+```http
+POST /auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+### Get Current User
+```http
+GET /auth/me
+Authorization: Bearer <access_token>
+```
+
+### Change Password
+```http
+POST /auth/change-password
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "current_password": "oldpassword",
+  "new_password": "newpassword"
+}
+```
+
+### Logout
+Simply discard the tokens on the client side. The tokens will expire automatically.
+
+### Default Credentials
+- **Username:** `admin`
+- **Password:** `admin123`
+- **Important:** Change the default password after first login!
 
 ---
 

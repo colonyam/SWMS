@@ -21,8 +21,10 @@ smart-waste-management/
 │   │   │   ├── sensor_reading.py
 │   │   │   ├── alert.py
 │   │   │   ├── collection_route.py
-│   │   │   └── collection_event.py
+│   │   │   ├── collection_event.py
+│   │   │   └── user.py        # User authentication model
 │   │   ├── routers/           # API endpoints
+│   │   │   ├── auth.py        # Authentication endpoints
 │   │   │   ├── bins.py
 │   │   │   ├── readings.py
 │   │   │   ├── analytics.py
@@ -37,15 +39,18 @@ smart-waste-management/
 │   └── requirements.txt
 │
 ├── frontend/                   # HTML/CSS/JS Frontend
-│   ├── index.html             # Main HTML file
+│   ├── index.html             # Main dashboard HTML
+│   ├── login.html             # Login page
 │   ├── css/
-│   │   └── styles.css         # Complete stylesheet
+│   │   ├── styles.css         # Main stylesheet
+│   │   └── login.css          # Login page styles
 │   └── js/
 │       ├── config.js          # Configuration
-│       ├── api.js             # API client
+│       ├── api.js             # API client with auth
 │       ├── charts.js          # Chart.js integration
 │       ├── map.js             # Leaflet map integration
-│       └── app.js             # Main application logic
+│       ├── app.js             # Main application logic
+│       └── login.js           # Login page script
 │
 ├── iot_simulator/              # IoT Sensor Simulator
 │   ├── simulator.py           # Python simulator
@@ -101,6 +106,14 @@ smart-waste-management/
 - Priority bins list
 - Responsive design
 
+### 6. Authentication & Security
+- JWT-based user authentication
+- Role-based access control (RBAC)
+- Secure password hashing (bcrypt)
+- Session management with refresh tokens
+- Protected API endpoints
+- Login page with modern UI
+
 ---
 
 ## Tech Stack
@@ -147,9 +160,13 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 # 3. Seed the database (in another terminal)
 curl -X POST http://localhost:8000/api/v1/seed-data
 
-# 4. Open http://localhost:8000 in your browser
+# 4. Open the login page: http://localhost:8000/login.html
 
-# 5. (Optional) Start IoT simulator
+# 5. Login with default credentials:
+#    Username: admin
+#    Password: admin123
+
+# 6. (Optional) Start IoT simulator
 cd ../iot_simulator
 python simulator.py
 ```
@@ -157,6 +174,15 @@ python simulator.py
 ---
 
 ## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/register` - Register new user (admin only)
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `GET /api/v1/auth/me` - Get current user info
+- `PUT /api/v1/auth/me` - Update user profile
+- `POST /api/v1/auth/change-password` - Change password
+- `GET /api/v1/auth/users` - List all users (admin only)
 
 ### Dashboard & Analytics
 - `GET /api/v1/analytics/dashboard` - Dashboard statistics
@@ -242,32 +268,34 @@ python simulator.py
 
 | Component | Files | Lines of Code |
 |-----------|-------|---------------|
-| Backend | 21 | ~3,500 |
-| Frontend | 6 | ~2,500 |
+| Backend | 24 | ~4,200 |
+| Frontend | 9 | ~3,200 |
 | IoT Simulator | 2 | ~500 |
-| Documentation | 4 | ~800 |
-| **Total** | **33** | **~7,300** |
+| Documentation | 4 | ~900 |
+| **Total** | **39** | **~8,800** |
 
 ---
 
 ## Key Features by Module
 
 ### Backend (app/)
-- **main.py**: FastAPI app, CORS, route registration, seed endpoint
+- **main.py**: FastAPI app, CORS, route registration, seed endpoint, default admin creation
 - **config.py**: Environment-based configuration
 - **database.py**: SQLAlchemy setup, session management
 - **websocket.py**: WebSocket connection manager
-- **models/**: 5 database models with relationships
-- **routers/**: 5 API route modules with CRUD operations
+- **models/**: 6 database models with relationships (including User)
+- **routers/**: 6 API route modules with CRUD operations (including Auth)
 - **services/**: 3 service classes for business logic
 - **utils/schemas.py**: Pydantic models for validation
+- **utils/auth.py**: JWT authentication utilities
 
 ### Frontend (js/)
 - **config.js**: App configuration, constants
-- **api.js**: API client with 40+ methods
+- **api.js**: API client with 40+ methods (with auth token handling)
 - **charts.js**: Chart.js wrapper for 6 chart types
 - **map.js**: Leaflet map integration
-- **app.js**: Main app class with 20+ methods
+- **app.js**: Main app class with auth checks and logout
+- **login.js**: Login page with form validation
 
 ### IoT Simulator
 - **simulator.py**: Async sensor simulation

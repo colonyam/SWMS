@@ -1,5 +1,5 @@
 """Collection Route Model"""
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, Float,  DateTime, Enum, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base

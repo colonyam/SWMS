@@ -8,10 +8,19 @@ class ApiClient {
     }
     
     /**
+     * Get authentication token
+     */
+    getToken() {
+        return localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    }
+    
+    /**
      * Make an API request
      */
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
+        
+        const token = this.getToken();
         
         const defaultOptions = {
             headers: {
@@ -19,7 +28,23 @@ class ApiClient {
             },
         };
         
+        // Add auth token if available
+        if (token) {
+            defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         const response = await fetch(url, { ...defaultOptions, ...options });
+        
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            // Clear tokens and redirect to login
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('refresh_token');
+            window.location.href = 'login.html';
+            return null;
+        }
         
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
