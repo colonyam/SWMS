@@ -135,30 +135,7 @@ class SmartWasteApp {
             this.logout();
         });
 
-        // User menu dropdown (header)
-        const userMenuBtn = document.getElementById('user-menu-btn');
-        const userDropdown = document.getElementById('user-dropdown');
-        const userMenu = document.getElementById('user-menu');
-        
-        if (userMenuBtn && userDropdown && userMenu) {
-            userMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isOpen = userDropdown.classList.toggle('open');
-                userMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            });
-            
-            document.addEventListener('click', (e) => {
-                if (!userDropdown.classList.contains('open')) return;
-                if (!userMenu.contains(e.target)) {
-                    userDropdown.classList.remove('open');
-                    userMenuBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }
-        
-        document.getElementById('dropdown-logout')?.addEventListener('click', () => {
-            this.logout();
-        });
+        // Header user dropdown removed
         
         // Modal close buttons
         document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
