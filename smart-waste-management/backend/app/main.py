@@ -26,8 +26,50 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler"""
     # Startup
     logger.info("Starting up Smart Waste Management System...")
+    logger.info("Using database: %s", settings.DATABASE_URL)
     init_db()
     logger.info("Database initialized")
+
+    # Ensure default admin exists (dev convenience)
+    from app.database import SessionLocal
+    from app.models.user import User, UserRole
+    from app.utils.auth import get_password_hash
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(
+            (User.username == "collins") | (User.email == "collins@smartwaste.com")
+        ).first()
+
+        if not user:
+            user = User(
+                username="collins",
+                email="collins@smartwaste.com",
+                hashed_password=get_password_hash("colo1234"),
+                full_name="Collins Admin",
+                role=UserRole.ADMIN,
+                is_active=True,
+                is_superuser=True,
+            )
+            db.add(user)
+            logger.info("Default admin user created (username: collins, password: colo1234)")
+        else:
+            # Keep user but reset credentials to the known dev default
+            user.username = "collins"
+            user.email = "collins@smartwaste.com"
+            user.hashed_password = get_password_hash("colo1234")
+            user.role = UserRole.ADMIN
+            user.is_active = True
+            user.is_superuser = True
+            logger.info("Default admin user reset (username: collins, password: colo1234)")
+
+        db.commit()
+        logger.info("IMPORTANT: Please change the default password after first login!")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error ensuring default admin: {e}")
+    finally:
+        db.close()
     
     yield
     
@@ -83,9 +125,9 @@ def health_check():
 
 
 # API info endpoint
-@app.get("/")
-def root():
-    """API root endpoint"""
+@app.get("/api")
+def api_info():
+    """API info endpoint"""
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -103,53 +145,35 @@ def root():
     }
 
 
-# Create default admin user on startup
-@app.on_event("startup")
-async def create_default_admin():
-    """Create default admin user if no users exist"""
-    from sqlalchemy.orm import Session
-    from app.database import SessionLocal
-    from app.models.user import User, UserRole
-    from app.utils.auth import get_password_hash
-    
-    db = SessionLocal()
-    try:
-        # Check if any users exist
-        user_count = db.query(User).count()
-        if user_count == 0:
-            # Create default admin user
-            admin = User(
-                username="admin",
-                email="admin@smartwaste.com",
-                hashed_password=get_password_hash("admin123"),
-                full_name="System Administrator",
-                role=UserRole.ADMIN,
-                is_active=True,
-                is_superuser=True
-            )
-            db.add(admin)
-            db.commit()
-            logger.info("Default admin user created (username: admin, password: admin123)")
-            logger.info("IMPORTANT: Please change the default password after first login!")
-    except Exception as e:
-        logger.error(f"Error creating default admin: {e}")
-    finally:
-        db.close()
-
-
 # Serve static files (frontend)
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 if os.path.exists(frontend_path):
-    app.mount("/static", StaticFiles(directory=os.path.join(frontend_path)), name="static")
-    
-    @app.get("/{full_path:path}", response_class=HTMLResponse)
-    async def serve_frontend(full_path: str):
-        """Serve frontend HTML"""
-        index_path = os.path.join(frontend_path, "index.html")
-        if os.path.exists(index_path):
-            with open(index_path, "r") as f:
-                return f.read()
-        return HTMLResponse(content="<h1>Smart Waste Management System</h1><p>Frontend not built yet.</p>")
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+
+    def _frontend_file(filename: str) -> str:
+        return os.path.join(frontend_path, filename)
+
+    @app.get("/", response_class=HTMLResponse)
+    async def serve_login():
+        """Serve login page as default entry."""
+        return FileResponse(_frontend_file("login.html"))
+
+    @app.get("/login", response_class=HTMLResponse)
+    async def serve_login_alias():
+        return FileResponse(_frontend_file("login.html"))
+
+    @app.get("/login.html", response_class=HTMLResponse)
+    async def serve_login_html():
+        return FileResponse(_frontend_file("login.html"))
+
+    @app.get("/app", response_class=HTMLResponse)
+    async def serve_app():
+        """Serve main app after login."""
+        return FileResponse(_frontend_file("index.html"))
+
+    @app.get("/index.html", response_class=HTMLResponse)
+    async def serve_index_html():
+        return FileResponse(_frontend_file("index.html"))
 
 
 # Seed data endpoint for development

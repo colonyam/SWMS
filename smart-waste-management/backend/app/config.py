@@ -1,4 +1,5 @@
 """Configuration settings for the Smart Waste Management System"""
+import os
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
     ALERT_BATTERY_THRESHOLD: int = 20
     
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(__file__), "..", ".env")
         case_sensitive = True
 
 

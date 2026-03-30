@@ -130,7 +130,7 @@ async function handleLogin(event) {
             
             // Redirect to dashboard
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = '/app';
             }, 1000);
         } else {
             showToast(data.detail || 'Invalid username or password', 'error');
@@ -159,7 +159,7 @@ function checkExistingSession() {
         .then(response => {
             if (response.ok) {
                 // Already logged in, redirect to dashboard
-                window.location.href = 'index.html';
+                window.location.href = '/app';
             } else {
                 // Token expired, clear storage
                 localStorage.removeItem('access_token');

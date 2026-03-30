@@ -39,7 +39,7 @@ class SmartWasteApp {
         
         if (!token) {
             // Redirect to login page
-            window.location.href = 'login.html';
+            window.location.href = '/';
             return false;
         }
         
@@ -104,7 +104,7 @@ class SmartWasteApp {
         sessionStorage.removeItem('user');
         
         // Redirect to login
-        window.location.href = 'login.html';
+        window.location.href = '/';
     }
     
     /**
