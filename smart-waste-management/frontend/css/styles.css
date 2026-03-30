@@ -318,6 +318,65 @@ button {
     cursor: pointer;
 }
 
+.user-menu {
+    position: relative;
+}
+
+.user-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.user-menu-btn:hover {
+    background: var(--border-light);
+}
+
+.user-menu-btn i {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.user-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 160px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 6px;
+    display: none;
+    z-index: 200;
+}
+
+.user-dropdown.open {
+    display: block;
+}
+
+.user-dropdown-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    background: transparent;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.user-dropdown-item:hover {
+    background: var(--bg-primary);
+}
+
 /* ============== Page Content ============== */
 .page-content {
     flex: 1;
